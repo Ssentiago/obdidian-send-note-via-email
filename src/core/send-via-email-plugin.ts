@@ -96,7 +96,7 @@ export default class SendViaEmailPlugin extends Plugin {
             return;
         }
 
-        const mailtoLink = `mailto:${this.settings.defaultRecipient}?subject=${encodeURIComponent(file.name)}&body=${encodeURIComponent(content)}`;
+        const mailtoLink = `mailto:${this.settings.defaultRecipient}?subject=${encodeURIComponent(file.name)}${content ? `&body=${encodeURIComponent(content)}` : ''}`;
         const a = document.createElement('a');
         a.href = mailtoLink;
         a.style.display = 'none';
