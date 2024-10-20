@@ -1,11 +1,11 @@
 {
-    "name": "example",
+    "name": "send-note-via-email",
     "packageManager": "yarn@4.4.0",
     "author": "Sentiago",
     "license": "Apache-2.0",
     "version": "0.1.0",
     "type": "module",
-    "description": "example",
+    "description": "Send your note via email",
     "main": "src/main.ts",
     "scripts": {
         "dev": "yarn concurrently \"yarn rollup -c rollup.config.mjs -w --environment PRODUCTION:0\" \"yarn start-obsidian\"",
@@ -32,7 +32,7 @@
         "@typescript-eslint/utils": "^7.16.1",
         "auto-changelog": "^2.4.0",
         "concurrently": "^8.2.2",
-        "eslint": "^8.57.0",
+        "eslint": "^9.13.0",
         "nodemon": "^3.1.4",
         "obsidian": "latest",
         "prettier": "^3.3.3",

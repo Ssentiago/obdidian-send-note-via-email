@@ -1,10 +1,10 @@
 {
-    "id": "example",
-    "name": "example",
+    "id": "send-note-via-email",
+    "name": "Send note via email",
     "version": "0.1.0",
     "minAppVersion": "1.6.5",
     "author": "Sentiago",
     "authorUrl": "https://github.com/Ssentiago",
-    "description": "example",
+    "description": "Send your note via email",
     "isDesktopOnly": true
 }
