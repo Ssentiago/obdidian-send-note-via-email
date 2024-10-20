@@ -1,0 +1,1 @@
+![[LINUX Commands 1.xmind]]
