@@ -1,10 +1,19 @@
-import { Plugin, Menu, TAbstractFile, TFile, Notice } from 'obsidian';
+import {
+    Plugin,
+    Menu,
+    TAbstractFile,
+    TFile,
+    Notice,
+    normalizePath,
+} from 'obsidian';
 import SettingsManager, { DefaultSettings } from '../settings/settingsManager';
 import { SettingsTab } from '../settings/settings-tab';
+import showdown from 'showdown';
 
 export default class SendViaEmailPlugin extends Plugin {
     settingsManager!: SettingsManager;
     settings!: DefaultSettings;
+    converter = new showdown.Converter();
     /**
      * Initializes the plugin.
      *
@@ -61,6 +70,14 @@ export default class SendViaEmailPlugin extends Plugin {
                             await this.sendViaEmail(file);
                         });
                 });
+                menu.addItem((item) => [
+                    item
+                        .setTitle('Send via email as HTML')
+                        .setIcon('mail')
+                        .onClick(async () => {
+                            await this.sendViaEmail(file, true);
+                        }),
+                ]);
             }
         );
     }
@@ -78,10 +95,12 @@ export default class SendViaEmailPlugin extends Plugin {
      * Sends the content of a markdown file via email using the default mail client.
      *
      * @param file - The markdown file to be sent.
+     * @param asHtml - Whether to send the content as HTML or plain text.
      * @returns A Promise that resolves when the email is triggered.
      */
-    async sendViaEmail(file: TFile): Promise<void> {
-        const MAX_SAFE_LENGTH = 16000;
+    async sendViaEmail(file: TFile, asHtml = false): Promise<void> {
+        const WARNING_LENGTH = 100000;
+        const MAX_LENGTH = 500000;
 
         let content: string;
         try {
@@ -91,17 +110,54 @@ export default class SendViaEmailPlugin extends Plugin {
             return;
         }
 
-        if (content.length > MAX_SAFE_LENGTH) {
-            new Notice('The file is too large to be sent via email');
+        if (content.length > MAX_LENGTH) {
+            new Notice(
+                'The file is too large to be sent via email. But file link is copied to clipboard, you can attach it manually.'
+            );
+            this.attachFIleLinkToClipboard(file);
             return;
         }
 
-        const mailtoLink = `mailto:${this.settings.defaultRecipient}?subject=${encodeURIComponent(file.name)}${content ? `&body=${encodeURIComponent(content)}` : ''}`;
+        if (content.length > WARNING_LENGTH) {
+            new Notice(
+                'Warning: large file size may cause issues with some email clients'
+            );
+        }
+
+        if (asHtml) {
+            content = this.converter.makeHtml(content);
+        }
+
+        const defaultRecipient = this.settings.defaultRecipient;
+        const subject = file.basename;
+        const body = content.trim() ? content : '';
+
+        const mailtoLink = `mailto:${defaultRecipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         const a = document.createElement('a');
         a.href = mailtoLink;
-        a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+    }
+
+    /**
+     * Attaches a file link to the clipboard.
+     *
+     * @param file - The file for which the link is to be attached.
+     */
+    private attachFIleLinkToClipboard(file: TFile): void {
+        const basePath = this.app.vault.adapter.basePath;
+        const relativePath = file.path;
+
+        const fullPath = normalizePath(`${basePath}/${relativePath}`);
+        navigator.clipboard
+            .writeText(fullPath)
+            .then(() => {
+                new Notice('File link copied to clipboard');
+            })
+            .catch((err) => {
+                console.error(err);
+                new Notice('Failed to copy file link to clipboard');
+            });
     }
 }
